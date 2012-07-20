@@ -602,6 +602,7 @@ class Network:
                         logging.error('      Actual Keq({0:g} K) = {1:g}'.format(T, Keq0))
                 else:
                     # Check only kf(T)
+                    Keq = None
                     if kf0 / kf < 0.1 or kf0 / kf > 10.0:
                         error = True
                         logging.error('For path reaction {0!s}:'.format(rxn))
@@ -609,8 +610,18 @@ class Network:
                         logging.error('      Actual kf({0:g} K) = {1:g}'.format(T, kf0))
                 # If the k(E) values are invalid (in that they give the wrong 
                 # kf(T) or kr(T) when integrated), then raise an exception
+                cutoff = 1.0e-35 # Bypass NetworkError if expected values are very small (TEMPORARY FIX)
                 if error:
-                    raise NetworkError('Invalid k(E) values computed for path reaction "{0}" do not satisfy'.format(rxn))
+                    try:
+                        assert kf < cutoff
+                        if Keq:
+                            assert kf / Keq < cutoff
+                    except:
+                        raise NetworkError('Invalid k(E) values computed for path reaction "{0}" do not satisfy'.format(rxn))
+                    else:
+                        errStr = '    * Network error ignored because expected forward and/or reverse rate(s) < {0}'.format(cutoff)
+                        logging.error(errStr)
+                        rxn.kinetics.comment += '\n' + errStr[6:]
                 
         # In the past, we have occasionally encountered k(E) values that are NaN
         # Just to be safe, let's check to be sure this isn't happening with this network
