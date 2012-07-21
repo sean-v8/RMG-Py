@@ -610,16 +610,16 @@ class Network:
                         logging.error('      Actual kf({0:g} K) = {1:g}'.format(T, kf0))
                 # If the k(E) values are invalid (in that they give the wrong 
                 # kf(T) or kr(T) when integrated), then raise an exception
-                cutoff = 1.0e-35 # Bypass NetworkError if expected values are very small (TEMPORARY FIX)
+                cutoff = 1.0e-30 # Bypass NetworkError if expected values are very small (TEMPORARY FIX)
                 if error:
                     try:
                         assert kf < cutoff
                         if Keq:
                             assert kf / Keq < cutoff
                     except:
-                        raise NetworkError('Invalid k(E) values computed for path reaction "{0}" do not satisfy'.format(rxn))
+                        raise NetworkError('Invalid k(E) values computed for path reaction "{0}". Do not match expected k(T)'.format(rxn))
                     else:
-                        errStr = '    * Network error ignored because expected forward and/or reverse rate(s) < {0}'.format(cutoff)
+                        errStr = '    * Network error ignored because expected forward and reverse rate(s) < {0}'.format(cutoff)
                         logging.error(errStr)
                         rxn.kinetics.comment += '\n' + errStr[6:]
                 
